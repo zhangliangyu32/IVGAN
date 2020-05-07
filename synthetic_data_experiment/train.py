@@ -22,16 +22,16 @@ a = 1
 b = -1
 c = 0
 
-gamma = 0.5
-alpha = 0.2
-eta = 0.5
+gamma = 0
+alpha = 0
+eta = 0
 
 nz = 3
 np = 3
 width = 1
 
-lr = 2e-4
-lr_encoder = 0.01
+lr = 1e-4
+lr_encoder = 5e-3
 batchSize = 64
 nepochs = 20
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
@@ -151,29 +151,29 @@ for epoch in range(nepochs):
         # (3) Update E network: minimize reconstruction error
         ###########################
 
-        netE.train()
-        for j in range(10):
-            GAN_loss = torch.tensor(0.0, device=device)
-            noise_mask = torch.zeros((batch_size, nz), device=device)
-            real_mask = torch.ones((batch_size, nz), device=device)
-            index = torch.tensor(range(k * width, (k + 1) * width), dtype=torch.int64, device=device)
-            noise_mask = noise_mask.index_fill_(1, index, 1)
-            real_mask = real_mask.index_fill_(1, index, 0)
-            latent = torch.mul(netE(real), real_mask) + torch.mul(noise, noise_mask)
-            fake = netG(latent)
-            label = torch.full((batch_size,), k, device=device, dtype=torch.int64)
-            output = netD(fake)[1]
-            GAN_loss += gamma * criterion(output, label)
-            err_reconstruct = criterion_reconstruct(real, netG(netE(real)))
-            err_reconstruct += criterion_reconstruct(latent, netE(fake.detach()))
-            errE = err_reconstruct + alpha * GAN_loss
-            optimizerE.zero_grad()
-            errE.backward()
-            optimizerE.step()
-        netE.eval()        
+        # netE.train()
+        # for j in range(10):
+        #     GAN_loss = torch.tensor(0.0, device=device)
+        #     noise_mask = torch.zeros((batch_size, nz), device=device)
+        #     real_mask = torch.ones((batch_size, nz), device=device)
+        #     index = torch.tensor(range(k * width, (k + 1) * width), dtype=torch.int64, device=device)
+        #     noise_mask = noise_mask.index_fill_(1, index, 1)
+        #     real_mask = real_mask.index_fill_(1, index, 0)
+        #     latent = torch.mul(netE(real), real_mask) + torch.mul(noise, noise_mask)
+        #     fake = netG(latent)
+        #     label = torch.full((batch_size,), k, device=device, dtype=torch.int64)
+        #     output = netD(fake)[1]
+        #     GAN_loss += gamma * criterion(output, label)
+        #     err_reconstruct = criterion_reconstruct(real, netG(netE(real)))
+        #     err_reconstruct += criterion_reconstruct(latent, netE(fake.detach()))
+        #     errE = err_reconstruct + alpha * GAN_loss
+        #     optimizerE.zero_grad()
+        #     errE.backward()
+        #     optimizerE.step()
+        # netE.eval()        
         if i % 100 == 0:
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x):%.4f D(G(z)):%.4f CE_regularizer: %.4f Reconstruct_err: %.4f'
-            % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - gamma * CE_regularizer.item(), err_reconstruct))
+            % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - gamma * CE_regularizer.item(), 0))
 
 torch.save(netG.state_dict(), '%s/final_netG.pth' % (opt.outf))
 print("netG saved.")

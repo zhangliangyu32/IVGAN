@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 
 class SyntheticData(Dataset):
-    def __init__(self, size=10000, radius=1, std_err=0.1):
+    def __init__(self, size=50000, radius=1, std_err=0.1):
         super(SyntheticData, self).__init__()
         self.data = torch.zeros((size, 3))
         for k in range(size):
