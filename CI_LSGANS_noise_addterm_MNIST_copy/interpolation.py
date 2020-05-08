@@ -30,10 +30,10 @@ width = 25 # width = nz / np
 a = 1
 b = -1
 c = 0
-itfr_sigma = {0: 0.01, 50: 5e-3, 100: 1e-3, 150: 0}
+itfr_sigma = {0: 1e-2, 50: 5e-3, 100: 1e-3, 150: 0}
 
-lr = 0.0002
-lr_encoder = 0.01
+lr = 1e-4
+lr_encoder = 5e-3
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
 workers = 2 # 'number of data loading workers'
@@ -42,12 +42,12 @@ beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
 alpha = 0.5 # coefficient for GAN_loss tern when training netE
 gamma = 0.5 # coefficient for the mutual information
-eta = 0.5 # coefficient for the reconstruction err when training E
-default_device = 'cuda:0'
+eta = 0.5 # coefficient for the reconstruction err when training G
+default_device = 'cuda:3'
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default='cifar10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
-parser.add_argument('--dataroot', default='~/datasets/data_cifar10', help='path to dataset')
+parser.add_argument('--dataset', default='mnist', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
+parser.add_argument('--dataroot', default='~/datasets', help='path to dataset')
 parser.add_argument('--netG', default='', help="path to netG (to continue training)")
 parser.add_argument('--netD', default='', help="path to netD (to continue training)")
 parser.add_argument('--netE', default='', help='path to netE.')
@@ -100,16 +100,17 @@ elif opt.dataset == 'cifar10':
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
     nc=3
-    m_true, s_true = compute_cifar10_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="CIFAR10")
 
 elif opt.dataset == 'mnist':
-        dataset = dset.MNIST(root=opt.dataroot, download=True,
-                           transform=transforms.Compose([
-                               transforms.Resize(imageSize),
-                               transforms.ToTensor(),
-                               transforms.Normalize((0.5,), (0.5,)),
-                           ]))
-        nc=1
+    dataset = dset.MNIST(root=opt.dataroot, download=True,
+                        transform=transforms.Compose([
+                            transforms.Resize(imageSize),
+                            transforms.ToTensor(),
+                            transforms.Normalize((0.5,), (0.5,)),
+                        ]))
+    nc=1
+    m_true, s_true = compute_dataset_statistics(target_set="MNIST")
 
 elif opt.dataset == 'fake':
     dataset = dset.FakeData(image_size=(3, imageSize, imageSize),
@@ -137,18 +138,23 @@ def weights_init(m):
         m.bias.data.fill_(0)
 
 
-def generate_sample(generator, latent_size, num_image=50000, batch_size=50): #generate data sample to compute the fid.
+def generate_sample(generator, latent_size, num_image=60000, batch_size=50): #generate data sample to compute the fid.
     generator.eval()
     
     z_try = Variable(torch.randn(1, latent_size, 1, 1).to(device))
     data_try = generator(z_try)
 
-    data_sample = numpy.empty((num_image, data_try.shape[1], data_try.shape[2], data_try.shape[3]))
+    data_sample = numpy.empty((num_image, 3, data_try.shape[2], data_try.shape[3]))
     for i in range(0, num_image, batch_size):
         start = i
         end = i + batch_size
         z = Variable(torch.randn(batch_size, latent_size, 1, 1).to(device))
         d = generator(z)
+        if nc == 1:
+            tmp = torch.zeros((d.shape[0], 3, d.shape[2], d.shape[3]))
+            for j in range(3):
+                tmp[:, j, :, :] = d[:, 0, :, :]
+            d = tmp
         data_sample[start:end] = d.cpu().data.numpy()
     
     return data_sample
@@ -263,9 +269,9 @@ for epoch in range(nepochs):
             label = torch.full((batch_size,), k, device=device, dtype=torch.int64)
             output = netD(fake)[1]
             GAN_loss += gamma * criterion(output, label)
-            errE = alpha * GAN_loss
             err_reconstruct = criterion_reconstruct(real, netG(netE(real)))
             err_reconstruct += criterion_reconstruct(latent, netE(fake.detach()))
+            errE = err_reconstruct + alpha * GAN_loss
             optimizerE.zero_grad()
             errE.backward()
             optimizerE.step()
@@ -273,7 +279,7 @@ for epoch in range(nepochs):
         
 
 
-        if i % 1000 == 0:
+        if i % 500 == 0:
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x):%.4f D(G(z)):%.4f CE_regularizer: %.4f Reconstruct_err: %.4f'
             % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - gamma * CE_regularizer.item(), err_reconstruct))
     
@@ -287,9 +293,11 @@ for epoch in range(nepochs):
         fid_record.append(fid)
         print("The Frechet Inception Distance:", fid)
          # do checkpointing
-        torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch + 1))
-        torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch + 1))
+        # torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch + 1))
+        # torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch + 1))
 
+torch.save(netG.state_dict(), '%s/final_netG.pth' % (opt.outf))
+torch.save(netE.state_dict(), '%s/final_netE.pth' % (opt.outf))
 with open('./fid_record.txt', 'w') as f:
     for i in fid_record:
         f.write(str(i) + '\n')

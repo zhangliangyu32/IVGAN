@@ -43,7 +43,7 @@ weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
 alpha = 0.5 # coefficient for GAN_loss tern when training netE
 gamma = 0.5 # coefficient for the mutual information
 eta = 0.5 # coefficient for the reconstruction err when training E
-default_device = 'cuda:0'
+default_device = 'cuda:1'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='cifar10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')

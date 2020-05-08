@@ -40,10 +40,10 @@ workers = 2 # 'number of data loading workers'
 nepochs = 150
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
-alpha = 0.5 # coefficient for GAN_loss term when training netE
+alpha = 1 # coefficient for GAN_loss term when training netE
 gamma = 0.5 # coefficient for the mutual information
 eta = 0.25 # coefficient for the reconstruction err when training G
-default_device = 'cuda:3'
+default_device = 'cuda:4'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--source_root', default='~/datasets', help='path to dataset MNIST')
@@ -73,7 +73,7 @@ torch.manual_seed(opt.manualSeed)
 cudnn.benchmark = True
 
 #dataset = Stacked_MNIST(imageSize=imageSize)
-dataset = Stacked_MNIST(load=False, source_root=opt.source_root, imageSize=imageSize)
+dataset = Stacked_MNIST(load=True, source_root=opt.source_root, imageSize=imageSize)
 nc=3
 assert dataset
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batchSize,
@@ -259,7 +259,7 @@ for epoch in range(nepochs):
         
 
 
-        if i % 500 == 0:
+        if i % 1000 == 0:
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x):%.4f D(G(z)):%.4f CE_regularizer: %.4f Reconstruct_err: %.4f'
             % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - gamma * CE_regularizer.item(), err_reconstruct))
     

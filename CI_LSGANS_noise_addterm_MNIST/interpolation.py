@@ -30,20 +30,20 @@ width = 25 # width = nz / np
 a = 1
 b = -1
 c = 0
-itfr_sigma = {0: 3e-2, 50: 1e-2, 100: 3e-3}
+itfr_sigma = {0: 1e-2, 50: 5e-3, 100: 1e-3, 150: 0}
 
 lr = 1e-4
 lr_encoder = 5e-3
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
 workers = 2 # 'number of data loading workers'
-nepochs = 150
+nepochs = 200
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
 alpha = 0.5 # coefficient for GAN_loss tern when training netE
 gamma = 0.5 # coefficient for the mutual information
 eta = 0.5 # coefficient for the reconstruction err when training G
-default_device = 'cuda:1'
+default_device = 'cuda:2'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='mnist', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
