@@ -66,7 +66,7 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
             # state size. (ndf*8) x 4 x 4
         )
-        self.linear1 = nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False)
+        self.linear1 = nn.Sequential(nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False))
         self.linear2 = nn.Linear(ndf * 8 * 4 * 4, np)
     def forward(self, input):
         if input.is_cuda and self.ngpu > 1:

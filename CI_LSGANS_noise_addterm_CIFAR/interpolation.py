@@ -30,19 +30,19 @@ width = 25 # width = nz / np
 a = 1
 b = -1
 c = 0
-itfr_sigma = {0: 0.01, 50: 5e-3, 100: 1e-3, 150: 0}
+itfr_sigma = {0: 0.05, 50: 0.01, 100: 1e-3, 200: 0}
 
 lr = 0.0002
 lr_encoder = 0.01
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
 workers = 2 # 'number of data loading workers'
-nepochs = 200
+nepochs = 300
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
-alpha = 0.5 # coefficient for GAN_loss tern when training netE
+alpha = 1 # coefficient for GAN_loss tern when training netE
 gamma = 0.5 # coefficient for the mutual information
-eta = 0.5 # coefficient for the reconstruction err when training E
+eta = 0.25 # coefficient for the reconstruction err when training E
 default_device = 'cuda:0'
 
 parser = argparse.ArgumentParser()
@@ -100,7 +100,7 @@ elif opt.dataset == 'cifar10':
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
     nc=3
-    m_true, s_true = compute_cifar10_statistics()
+    m_true, s_true = compute_dataset_statistics()
 
 elif opt.dataset == 'mnist':
         dataset = dset.MNIST(root=opt.dataroot, download=True,
@@ -275,7 +275,7 @@ for epoch in range(nepochs):
 
         if i % 1000 == 0:
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x):%.4f D(G(z)):%.4f CE_regularizer: %.4f Reconstruct_err: %.4f'
-            % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - gamma * CE_regularizer.item(), err_reconstruct))
+            % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - CE_regularizer.item(), err_reconstruct))
     
     if (epoch + 1) % 10 == 0:
         vutils.save_image(real, '%s/real_samples.png' % opt.outp, normalize=True)

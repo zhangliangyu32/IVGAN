@@ -201,15 +201,32 @@ def calculate_activation_statistics(dataset, model, batch_size=50,
 
 def compute_dataset_statistics(target_set="MNIST", batch_size=50, dims=2048, cuda=True):
     if target_set == "CIFAR10":
+        imageSize = 64
         dataset = datasets.CIFAR10(root="~/datasets/data_cifar10", train=False, download=True,
                         transform=transforms.Compose([
-                          transforms.ToTensor()
+                        transforms.Resize(imageSize),
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                         ]))
     elif target_set == "MNIST":
+        imageSize = 64
         dataset = datasets.MNIST(root="~/datasets", train=True, download=True, 
                         transform=transforms.Compose([
-                          transforms.ToTensor()
+                        transforms.Resize(imageSize),
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.5,), (0.5,)),
                         ]))
+    elif target_set == "LSUN":
+        imageSize = 128
+        dataset = dset.LSUN(root=opt.dataroot, classes='bedroom',
+                        transform=transforms.Compose([
+                            transforms.Resize(imageSize),
+                            transforms.CenterCrop(imageSize),
+                            transforms.ToTensor(),
+                            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                        ]))
+
+
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
@@ -242,6 +259,7 @@ def compute_dataset_statistics(target_set="MNIST", batch_size=50, dims=2048, cud
     mu = np.mean(pred_arr, axis=0)
     sigma = np.cov(pred_arr, rowvar=False)
     return mu, sigma
+
 
 def compute_svhn_statistics(batch_size=50, dims=2048, cuda=True):
     raise NotImplementedError

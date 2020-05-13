@@ -33,7 +33,7 @@ c = 0
 itfr_sigma = {0: 3e-2, 50: 1e-2, 100: 5e-3}
 
 lr = 1e-4
-lr_encoder = 1e-3
+lr_encoder = 5e-3
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
 workers = 2 # 'number of data loading workers'
@@ -261,7 +261,7 @@ for epoch in range(nepochs):
 
         if i % 1000 == 0:
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x):%.4f D(G(z)):%.4f CE_regularizer: %.4f Reconstruct_err: %.4f'
-            % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - gamma * CE_regularizer.item(), err_reconstruct))
+            % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item(), D_x, D_Gz, 0 - CE_regularizer.item(), err_reconstruct))
     
     if (epoch + 1) % 10 == 0:
         vutils.save_image(real, '%s/real_samples.png' % opt.outp, normalize=True)
