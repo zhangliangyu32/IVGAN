@@ -205,7 +205,7 @@ for epoch in range(nepochs):
             optimizerG.zero_grad()
             errG.backward()
             optimizerG.step()
-        if i % 100 == 0:
+        if i % 1000 == 0:
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f'
             % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item()))
     

@@ -26,9 +26,9 @@ ndf = 64
 nef = 16
 np = 4
 width = 25 # width = nz / np
-itfr_sigma = {0: 0.05, 100: 0.01, 200: 3e-3, 250: 1e-3}
+itfr_sigma = {0: 0}
 
-lr = 0.0001
+lr = 5e-5
 lr_encoder = 5e-3
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
@@ -43,7 +43,7 @@ default_device = 'cuda:5'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='mnist', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
-parser.add_argument('--dataroot', default='~/datasets', help='path to dataset')
+parser.add_argument('--dataroot', default='/data1/zhangliangyu/datasets', help='path to dataset')
 parser.add_argument('--netG', default='', help="path to netG (to continue training)")
 parser.add_argument('--netD', default='', help="path to netD (to continue training)")
 parser.add_argument('--netE', default='', help='path to netE.')
