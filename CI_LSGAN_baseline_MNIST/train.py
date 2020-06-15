@@ -159,8 +159,6 @@ print(netD)
 # encoder = torch.load('./sim_encoder.pth')
 # encoder.eval()
 
-criterion = nn.BCELoss()
-
 fixed_noise = torch.randn(batchSize, nz, 1, 1, device=device)
 
 # setup optimizer
