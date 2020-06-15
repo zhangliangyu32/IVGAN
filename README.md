@@ -1,2 +1,2 @@
-# BCGAN
-Block Coordinate GAN
+# IVGAN
+Intervention GAN
