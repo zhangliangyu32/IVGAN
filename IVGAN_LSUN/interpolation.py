@@ -86,7 +86,7 @@ elif opt.dataset == 'lsun':
                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                         ]))
     nc=3
-    m_true, s_true = compute_dataset_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="LSUN", batch_size=50, dims=2048, cuda=True, device=default_device)
 elif opt.dataset == 'cifar10':
     dataset = dset.CIFAR10(root=opt.dataroot, download=True,
                            transform=transforms.Compose([
@@ -185,7 +185,7 @@ optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerE = optim.Adam(netE.parameters(), lr=lr_encoder, betas=(beta1, 0.999), weight_decay=weight_decay_coeff)
 
-with open('./fid_record.txt', 'w') as f:
+with open('./fid_record.txt', 'a') as f:
     f.write("fid_record:" + '\n')
 
 
@@ -281,7 +281,7 @@ for epoch in range(nepochs):
         vutils.save_image(fake.detach(), '%s/fake_samples_epoch_%03d.png' % (opt.outp, epoch + 1), normalize=True)
 
         dataset_fake = generate_sample(generator = netG, latent_size = nz)
-        fid = calculate_fid(dataset_fake, m_true, s_true)
+        fid = calculate_fid(dataset_fake, m_true, s_true, device=default_device)
         print("The Frechet Inception Distance:", fid)
         # do checkpointing
         with open('./fid_record.txt', 'a') as f:

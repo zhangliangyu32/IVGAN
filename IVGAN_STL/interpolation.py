@@ -40,7 +40,7 @@ weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
 alpha = 1 # coefficient for GAN_loss tern when training netE
 gamma = 0.5 # coefficient for the mutual information
 eta = 0.25 # coefficient for the reconstruction err when training E
-default_device = 'cuda:0'
+default_device = 'cuda:7'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='stl10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | stl10')
@@ -193,7 +193,7 @@ optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerE = optim.Adam(netE.parameters(), lr=lr_encoder, betas=(beta1, 0.999), weight_decay=weight_decay_coeff)
 
-with open('./fid_record.txt', 'w') as f:
+with open('./fid_record.txt', 'a') as f:
     f.write("fid_record:" + '\n')
 
 

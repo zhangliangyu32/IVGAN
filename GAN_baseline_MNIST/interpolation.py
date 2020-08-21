@@ -33,7 +33,7 @@ workers = 2 # 'number of data loading workers'
 nepochs = 300
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
-default_device = 'cuda:1'
+default_device = 'cuda:2'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='mnist', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
@@ -172,8 +172,8 @@ fixed_noise = torch.randn(batchSize, nz, 1, 1, device=device)
 optimizerD = optim.Adam(netD.parameters(), lr=lr_D, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr_G, betas=(beta1, 0.999))
 
-fid_record = []
-
+with open('./fid_record.txt', 'a') as f:
+    f.write("fid_record:" + '\n')
 
 for epoch in range(nepochs):
     if epoch in itfr_sigma:
@@ -229,14 +229,12 @@ for epoch in range(nepochs):
 
         dataset_fake = generate_sample(generator = netG, latent_size = nz)
         fid = calculate_fid(dataset_fake, m_true, s_true)
-        fid_record.append(fid)
         print("The Frechet Inception Distance:", fid)
-         # do checkpointing
+        # do checkpointing
+        with open('./fid_record.txt', 'a') as f:
+            f.write(str(fid) + '\n')
     
 
 torch.save(netG.state_dict(), '%s/final_netG.pth' % (opt.outf))
 torch.save(netD.state_dict(), '%s/final_netD.pth' % (opt.outf))
 
-with open('./fid_record.txt', 'w') as f:
-    for i in fid_record:
-        f.write(str(i) + '\n')

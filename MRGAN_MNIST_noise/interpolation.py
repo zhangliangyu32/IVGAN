@@ -24,11 +24,10 @@ nz = 100 # size of latent variable
 ngf = 64 
 ndf = 64 
 nef = 16
-itfr_sigma = {0: 0}
+itfr_sigma = {0: 0.05, 50: 0.01, 100: 1e-3, 200: 0}
 
-
-lr = 5e-5
-lr_encoder = 5e-3
+lr = 0.0002
+lr_encoder = 0.01
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
 workers = 2 # 'number of data loading workers'

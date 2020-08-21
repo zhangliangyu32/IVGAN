@@ -30,10 +30,10 @@ lr_G = 2e-4
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
 workers = 2 # 'number of data loading workers'
-nepochs = 300
+nepochs = 400
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
-default_device = 'cuda:2'
+default_device = 'cuda:0'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default="cifar10", help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
@@ -64,12 +64,12 @@ cudnn.benchmark = True
 if opt.dataset in ['imagenet', 'folder', 'lfw']:
     # folder dataset
     dataset = dset.ImageFolder(root=opt.dataroot,
-                               transform=transforms.Compose([
-                                   transforms.Resize(imageSize),
-                                   transforms.CenterCrop(imageSize),
-                                   transforms.ToTensor(),
-                                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                               ]))
+                                transform=transforms.Compose([
+                                transforms.Resize(imageSize),
+                                transforms.CenterCrop(imageSize),
+                                transforms.ToTensor(),
+                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                                ]))
     nc=3
 elif opt.dataset == 'lsun':
     classes = [ c + '_train' for c in opt.classes.split(',')]
@@ -81,24 +81,24 @@ elif opt.dataset == 'lsun':
                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                         ]))
     nc=3
-    m_true, s_true = compute_dataset_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="LSUN", batch_size=50, dims=2048, cuda=True, device=default_device)
 elif opt.dataset == 'cifar10':
     dataset = dset.CIFAR10(root=opt.dataroot, download=True,
-                           transform=transforms.Compose([
-                               transforms.Resize(imageSize),
-                               transforms.ToTensor(),
-                               transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                           ]))
+                            transform=transforms.Compose([
+                            transforms.Resize(imageSize),
+                            transforms.ToTensor(),
+                            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                            ]))
     nc=3
-    m_true, s_true = compute_dataset_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="CIFAR10", batch_size=50, dims=2048, cuda=True, device=default_device)
 
 elif opt.dataset == 'mnist':
         dataset = dset.MNIST(root=opt.dataroot, download=True,
-                           transform=transforms.Compose([
-                               transforms.Resize(imageSize),
-                               transforms.ToTensor(),
-                               transforms.Normalize((0.5,), (0.5,)),
-                           ]))
+                            transform=transforms.Compose([
+                            transforms.Resize(imageSize),
+                            transforms.ToTensor(),
+                            transforms.Normalize((0.5,), (0.5,)),
+                            ]))
         nc=1
 
 elif opt.dataset == 'fake':
@@ -108,7 +108,7 @@ elif opt.dataset == 'fake':
 
 assert dataset
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batchSize,
-                                         shuffle=True, num_workers=int(workers))
+                                        shuffle=True, num_workers=int(workers))
 
 
 ngpu = 1
@@ -168,7 +168,7 @@ fixed_noise = torch.randn(batchSize, nz, 1, 1, device=device)
 optimizerD = optim.Adam(netD.parameters(), lr=lr_D, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr_G, betas=(beta1, 0.999))
 
-with open('./fid_record.txt', 'w') as f:
+with open('./fid_record.txt', 'a') as f:
     f.write("fid_record:" + '\n')
 
 
@@ -225,7 +225,7 @@ for epoch in range(nepochs):
         vutils.save_image(fake.detach(), '%s/fake_samples_epoch_%03d.png' % (opt.outp, epoch + 1), normalize=True)
 
         dataset_fake = generate_sample(generator = netG, latent_size = nz)
-        fid = calculate_fid(dataset_fake, m_true, s_true)
+        fid = calculate_fid(dataset_fake, m_true, s_true, device=default_device)
         print("The Frechet Inception Distance:", fid)
         # do checkpointing
         with open('./fid_record.txt', 'a') as f:

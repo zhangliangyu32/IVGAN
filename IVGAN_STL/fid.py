@@ -53,7 +53,7 @@ except ImportError:
     def tqdm(x): return x
 
 from inception import InceptionV3
-
+default_device = 'cuda:7'
 
 def get_activations(dataset, model, batch_size=50, dims=2048,
                     cuda=True, verbose=False):
@@ -99,7 +99,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048,
 
         batch = torch.from_numpy(images).type(torch.FloatTensor)
         if cuda:
-            batch = batch.cuda()
+            batch = batch.to(default_device)
 
         pred = model(batch)[0]
 
@@ -239,7 +239,7 @@ def compute_dataset_statistics(target_set="STL10", batch_size=50, dims=2048, cud
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
     model = InceptionV3([block_idx])
     if cuda:
-        model.cuda()
+        model.to(default_device)
 
     model.eval()
     pred_arr = np.empty((len(dataset), dims))
@@ -255,7 +255,7 @@ def compute_dataset_statistics(target_set="STL10", batch_size=50, dims=2048, cud
             x = tmp
         end = start + x.size(0)
         if cuda:
-            x = x.cuda()
+            x = x.to(default_device)
         pred = model(x)[0]
         if pred.size(2) != 1 or pred.size(3) != 1:
             pred = adaptive_avg_pool2d(pred, output_size=(1, 1))
@@ -297,7 +297,7 @@ def calculate_fid(dataset_fake, m_true, s_true, batch_size=50, cuda=True, dims=2
 
     model = InceptionV3([block_idx])
     if cuda:
-        model.cuda()
+        model.to(default_device)
 
     m1, s1 = calculate_activation_statistics(dataset_fake, model, batch_size,
                                          dims, cuda)

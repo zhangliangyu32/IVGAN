@@ -33,7 +33,7 @@ workers = 2 # 'number of data loading workers'
 nepochs = 300
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
-default_device = 'cuda:2'
+default_device = 'cuda:3'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='stl10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake | stl10')
@@ -176,7 +176,7 @@ fixed_noise = torch.randn(batchSize, nz, 1, 1, device=device)
 optimizerD = optim.Adam(netD.parameters(), lr=lr_D, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr_G, betas=(beta1, 0.999))
 
-with open('./fid_record.txt', 'w') as f:
+with open('./fid_record.txt', 'a') as f:
     f.write("fid_record:" + '\n')
 
 
