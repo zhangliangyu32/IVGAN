@@ -26,10 +26,11 @@ ndf = 64
 nef = 16
 np = 4
 width = 25 # width = nz / np
-itfr_sigma = {0: 0.05, 100: 0.01, 200: 3e-3, 250: 1e-3, 300: 3e-4}
+itfr_sigma = {0: 0.05, 100: 0.01, 200: 3e-3, 300: 1e-3}
 
 
-lr = 0.0002
+lr_D = 2e-4
+lr_G = 2e-4
 lr_encoder = 0.01
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
@@ -40,7 +41,7 @@ weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
 alpha = 1 # coefficient for GAN_loss tern when training netE
 gamma = 0.5 # coefficient for the mutual information
 eta = 0.25 # coefficient for the reconstruction err when training E
-default_device = 'cuda:4'
+default_device = 'cuda:3'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='cifar10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
@@ -183,8 +184,8 @@ criterion_BCE = nn.BCELoss()
 fixed_noise = torch.randn(batchSize, nz, 1, 1, device=device)
 
 # setup optimizer
-optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
-optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
+optimizerD = optim.Adam(netD.parameters(), lr=lr_D, betas=(beta1, 0.999))
+optimizerG = optim.Adam(netG.parameters(), lr=lr_G, betas=(beta1, 0.999))
 optimizerE = optim.Adam(netE.parameters(), lr=lr_encoder, betas=(beta1, 0.999), weight_decay=weight_decay_coeff)
 
 with open('./fid_record.txt', 'a') as f:

@@ -25,8 +25,8 @@ ngf = 64
 ndf = 64 
 itfr_sigma = {0: 0}
 
-lr_D = 2e-4
 lr_G = 5e-5
+lr_D = 2e-4 # weird trick
 batchSize = 64
 imageSize = 64 # 'the height / width of the input image to network'
 workers = 2 # 'number of data loading workers'
@@ -191,16 +191,16 @@ for epoch in range(nepochs):
         pixd_noise = torch.randn(real.size(), device=device)
         pixg_noise = torch.randn(real.size(), device=device)
         
-        label_real = torch.full((batch_size,), 0, device=device, dtype=torch.float32)
+        label_real = torch.full((batch_size,), 1, device=device, dtype=torch.float32)
         output = netD(real + sigma * pixd_noise) # unnormalized
         errD = criterion_BCE(output, label_real)
         D_x = torch.sigmoid(output).mean().item()
-        label_fake = torch.full((batch_size,), 1, device=device, dtype=torch.float32)
+        label_fake = torch.full((batch_size,), 0, device=device, dtype=torch.float32)
         output = netD(netG(noise) + sigma * pixg_noise)
         errD += criterion_BCE(output, label_fake)
         D_Gz = torch.sigmoid(output).mean().item()
 
-        errG = criterion_BCE(1 - output, label_fake)
+        errG = criterion_BCE(output, label_real)
         
         if errG.item() < 2:
             optimizerD.zero_grad()

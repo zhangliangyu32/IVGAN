@@ -37,7 +37,7 @@ beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
 lam2 = 0.25 # coefficient for GAN_loss term
 lam1 = 0.25 # coefficient for the reconstruction err
-default_device = 'cuda:3'
+default_device = 'cuda:6'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='stl10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | stl10')
@@ -119,7 +119,7 @@ elif opt.dataset == 'stl10':
                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
                         ]), download = True)
     nc=3
-    m_true, s_true = compute_dataset_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="STL10", batch_size=50, dims=2048, cuda=True, device=default_device)
 
 assert dataset
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batchSize,
@@ -195,7 +195,7 @@ optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerE = optim.Adam(netE.parameters(), lr=lr_encoder, betas=(beta1, 0.999), weight_decay=weight_decay_coeff)
 
-with open('./fid_record.txt', 'w') as f:
+with open('./fid_record.txt', 'a') as f:
     f.write("fid_record:" + '\n')
 
 

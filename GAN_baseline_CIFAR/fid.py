@@ -81,7 +81,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048,
 
     if batch_size > num_of_imgs:
         print(('Warning: batch size is bigger than the data size. '
-               'Setting batch size to data size'))
+                'Setting batch size to data size'))
         batch_size = num_of_imgs
 
     pred_arr = np.empty((num_of_imgs, dims))

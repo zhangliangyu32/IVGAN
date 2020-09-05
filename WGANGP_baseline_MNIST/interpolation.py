@@ -36,7 +36,7 @@ workers = 2 # 'number of data loading workers'
 nepochs = 600
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
-default_device = 'cuda:5'
+default_device = 'cuda:2'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='mnist', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
@@ -101,7 +101,7 @@ elif opt.dataset == 'mnist':
                     transforms.Normalize((0.5,), (0.5,)),
                     ]))
     nc=1
-    m_true, s_true = compute_dataset_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="MNIST", batch_size=50, dims=2048, cuda=True, device=default_device)
 
 elif opt.dataset == 'fake':
     dataset = dset.FakeData(image_size=(3, imageSize, imageSize),
@@ -110,7 +110,7 @@ elif opt.dataset == 'fake':
 
 assert dataset
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batchSize,
-                                         shuffle=True, num_workers=int(workers))
+                                        shuffle=True, num_workers=int(workers))
 
 
 ngpu = 1
@@ -196,7 +196,8 @@ fixed_noise = torch.randn(batchSize, nz, 1, 1, device=device)
 optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.9))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.9))
 
-fid_record = []
+with open('./fid_record.txt', 'a') as f:
+    f.write("fid_record:" + '\n')
 
 
 for epoch in range(nepochs):
@@ -237,17 +238,18 @@ for epoch in range(nepochs):
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f'
             % (epoch, nepochs, i, len(dataloader), errD.item(), errG.item()))
 
-    if ((epoch + 1) % 10) == 0:
+    if (epoch + 1) % 10 == 0:
         vutils.save_image(real, '%s/real_samples.png' % opt.outp, normalize=True)
         fake = netG(fixed_noise)
         vutils.save_image(fake.detach(), '%s/fake_samples_epoch_%03d.png' % (opt.outp, epoch + 1), normalize=True)
+
         dataset_fake = generate_sample(generator = netG, latent_size = nz)
-        fid = calculate_fid(dataset_fake, m_true, s_true)
-        fid_record.append(fid)
+        fid = calculate_fid(dataset_fake, m_true, s_true, device=default_device)
         print("The Frechet Inception Distance:", fid)
         # do checkpointing
-        torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch + 1))
-        torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch + 1))
-with open('./fid_record.txt', 'w') as f:
-    for i in fid_record:
-        f.write(str(i) + '\n')
+        with open('./fid_record.txt', 'a') as f:
+            f.write(str(fid) + '\n')
+    
+
+torch.save(netG.state_dict(), '%s/final_netG.pth' % (opt.outf))
+torch.save(netD.state_dict(), '%s/final_netD.pth' % (opt.outf))

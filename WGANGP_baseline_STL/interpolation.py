@@ -36,7 +36,7 @@ workers = 2 # 'number of data loading workers'
 nepochs = 600
 beta1 = 0.5 # 'beta1 for adam. default=0.5'
 weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
-default_device = 'cuda:5'
+default_device = 'cuda:3'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='stl10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake | stl10')
@@ -101,7 +101,7 @@ elif opt.dataset == 'stl10':
                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                         ]), download=True)
     nc=3
-    m_true, s_true = compute_dataset_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="STL10", batch_size=50, dims=2048, cuda=True, device=default_device)
 elif opt.dataset == 'mnist':
         dataset = dset.MNIST(root=opt.dataroot, download=True,
                            transform=transforms.Compose([
@@ -200,7 +200,7 @@ optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.9))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.9))
 
 
-with open('./fid_record.txt', 'w') as f:
+with open('./fid_record.txt', 'a') as f:
     f.write("fid_record:" + '\n')
 
 
@@ -248,7 +248,7 @@ for epoch in range(nepochs):
         fake = netG(fixed_noise)
         vutils.save_image(fake.detach(), '%s/fake_samples_epoch_%03d.png' % (opt.outp, epoch + 1), normalize=True)
         dataset_fake = generate_sample(generator = netG, latent_size = nz)
-        fid = calculate_fid(dataset_fake, m_true, s_true)
+        fid = calculate_fid(dataset_fake, m_true, s_true, device=default_device)
         print("The Frechet Inception Distance:", fid)
         # do checkpointing
         with open('./fid_record.txt', 'a') as f:

@@ -206,16 +206,16 @@ for epoch in range(nepochs):
         pixd_noise = torch.randn(real.size(), device=device)
         pixg_noise = torch.randn(real.size(), device=device)
         
-        label_real = torch.full((batch_size,), 0, device=device, dtype=torch.float32)
+        label_real = torch.full((batch_size,), 1, device=device, dtype=torch.float32)
         output = netD(real + sigma * pixd_noise)[0] # unnormalized
         errD = criterion_BCE(output, label_real)
         D_x = torch.sigmoid(output).mean().item()
-        label_fake = torch.full((batch_size,), 1, device=device, dtype=torch.float32)
+        label_fake = torch.full((batch_size,), 0, device=device, dtype=torch.float32)
         output = netD(netG(noise) + sigma * pixg_noise)[0]
         errD += criterion_BCE(output, label_fake)
         D_Gz = torch.sigmoid(output).mean().item()
 
-        errG = criterion_BCE(1 - output, label_fake)
+        errG = criterion_BCE(output, label_real)
 
         k = torch.randint(np, (1,), dtype=torch.int64).item()
         noise_mask = torch.zeros((batch_size, nz, 1, 1), device=device)

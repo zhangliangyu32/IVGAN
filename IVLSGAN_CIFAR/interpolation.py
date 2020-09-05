@@ -23,7 +23,7 @@ from IPython import embed
 nz = 100 # size of latent variable
 ngf = 64 
 ndf = 64 
-nef = 16
+nef = 16 # or 16
 np = 4
 width = 25 # width = nz / np
 #label for LSGAN loss
@@ -43,7 +43,7 @@ weight_decay_coeff = 5e-4 # weight decay coefficient for training netE.
 alpha = 1 # coefficient for GAN_loss tern when training netE
 gamma = 0.5 # coefficient for the mutual information
 eta = 0.25 # coefficient for the reconstruction err when training E
-default_device = 'cuda:1'
+default_device = 'cuda:2'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='cifar10', help='cifar10 | lsun | mnist |imagenet | folder | lfw | fake')
@@ -100,7 +100,7 @@ elif opt.dataset == 'cifar10':
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
     nc=3
-    m_true, s_true = compute_dataset_statistics()
+    m_true, s_true = compute_dataset_statistics(target_set="CIFAR10", batch_size=50, dims=2048, cuda=True, device=default_device)
 
 elif opt.dataset == 'mnist':
         dataset = dset.MNIST(root=opt.dataroot, download=True,
@@ -188,8 +188,8 @@ optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerE = optim.Adam(netE.parameters(), lr=lr_encoder, betas=(beta1, 0.999), weight_decay=weight_decay_coeff)
 
-fid_record = []
-
+with open('./fid_record.txt', 'a') as f:
+    f.write("fid_record:" + '\n')
 
 for epoch in range(nepochs):
     if epoch in itfr_sigma:
@@ -284,12 +284,11 @@ for epoch in range(nepochs):
 
         dataset_fake = generate_sample(generator = netG, latent_size = nz)
         fid = calculate_fid(dataset_fake, m_true, s_true)
-        fid_record.append(fid)
         print("The Frechet Inception Distance:", fid)
-         # do checkpointing
-        torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch + 1))
-        torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch + 1))
+        # do checkpointing
+        with open('./fid_record.txt', 'a') as f:
+            f.write(str(fid) + '\n')
+    
 
-with open('./fid_record.txt', 'w') as f:
-    for i in fid_record:
-        f.write(str(i) + '\n')
+torch.save(netG.state_dict(), '%s/final_netG.pth' % (opt.outf))
+torch.save(netD.state_dict(), '%s/final_netD.pth' % (opt.outf))

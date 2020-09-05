@@ -56,7 +56,7 @@ from inception import InceptionV3
 
 
 def get_activations(dataset, model, batch_size=50, dims=2048,
-                    cuda=True, verbose=False):
+                    cuda=True, device='cuda:0', verbose=False):
     """Calculates the activations of the pool_3 layer for all images.
 
     Params:
@@ -82,7 +82,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048,
 
     if batch_size > num_of_imgs:
         print(('Warning: batch size is bigger than the data size. '
-               'Setting batch size to data size'))
+                'Setting batch size to data size'))
         batch_size = num_of_imgs
 
     pred_arr = np.empty((num_of_imgs, dims))
@@ -99,7 +99,7 @@ def get_activations(dataset, model, batch_size=50, dims=2048,
 
         batch = torch.from_numpy(images).type(torch.FloatTensor)
         if cuda:
-            batch = batch.cuda()
+            batch = batch.to(device)
 
         pred = model(batch)[0]
 
@@ -155,7 +155,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
         msg = ('fid calculation produces singular product; '
-               'adding %s to diagonal of cov estimates') % eps
+                'adding %s to diagonal of cov estimates') % eps
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -174,7 +174,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
 
 
 def calculate_activation_statistics(dataset, model, batch_size=50,
-                                    dims=2048, cuda=True, verbose=False):
+                                    dims=2048, cuda=True, device='cuda:0', verbose=False):
     """Calculation of the statistics used by the FID.
     Params:
     -- dataset     : An np array consisting of multiple images.
@@ -192,14 +192,14 @@ def calculate_activation_statistics(dataset, model, batch_size=50,
     -- sigma : The covariance matrix of the activations of the pool_3 layer of
                the inception model.
     """
-    act = get_activations(dataset, model, batch_size, dims, cuda, verbose)
+    act = get_activations(dataset, model, batch_size, dims, cuda, device, verbose)
     mu = np.mean(act, axis=0)
     sigma = np.cov(act, rowvar=False)
     return mu, sigma
 
 
 
-def compute_dataset_statistics(target_set="CIFAR10", batch_size=50, dims=2048, cuda=True):
+def compute_dataset_statistics(target_set="CIFAR10", batch_size=50, dims=2048, cuda=True, device='cuda:0'):
     if target_set == "CIFAR10":
         imageSize = 64
         dataset = datasets.CIFAR10(root="~/datasets/data_cifar10", train=False, download=True,
@@ -232,7 +232,7 @@ def compute_dataset_statistics(target_set="CIFAR10", batch_size=50, dims=2048, c
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
     model = InceptionV3([block_idx])
     if cuda:
-        model.cuda()
+        model.to(device)
 
     model.eval()
     pred_arr = np.empty((len(dataset), dims))
@@ -248,7 +248,7 @@ def compute_dataset_statistics(target_set="CIFAR10", batch_size=50, dims=2048, c
             x = tmp
         end = start + x.size(0)
         if cuda:
-            x = x.cuda()
+            x = x.to(device)
         pred = model(x)[0]
         if pred.size(2) != 1 or pred.size(3) != 1:
             pred = adaptive_avg_pool2d(pred, output_size=(1, 1))
@@ -282,17 +282,17 @@ def compute_svhn_statistics(batch_size=50, dims=2048, cuda=True):
 
 #     return m, s
 
-def calculate_fid(dataset_fake, m_true, s_true, batch_size=50, cuda=True, dims=2048): #m2 and s2 shoule be computed in advance
+def calculate_fid(dataset_fake, m_true, s_true, batch_size=50, cuda=True, device='cuda:0', dims=2048): #m2 and s2 shoule be computed in advance
     """Calculates the FID of two paths"""
 
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
 
     model = InceptionV3([block_idx])
     if cuda:
-        model.cuda()
+        model.to(device)
 
     m1, s1 = calculate_activation_statistics(dataset_fake, model, batch_size,
-                                         dims, cuda)
+                                        dims, cuda, device)
     fid_value = calculate_frechet_distance(m1, s1, m_true, s_true)
 
     return fid_value
